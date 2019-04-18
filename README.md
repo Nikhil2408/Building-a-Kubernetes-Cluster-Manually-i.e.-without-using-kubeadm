@@ -185,3 +185,4 @@ cfssl gencert -initca ca-csr.json | cfssljson -bare ca
 
 }
 ```
+![](images/16.png)

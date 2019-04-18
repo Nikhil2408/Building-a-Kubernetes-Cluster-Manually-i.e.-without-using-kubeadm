@@ -102,3 +102,38 @@ kubectl version --client
 ```
 
 ![](images/9.png)
+
+<h3> 2. Creating a Certificate Authority and TLS Certificates for  Kubernetes</h3>
+
+Certificate - Certificates are used to confirm identity. They are used to prove that you are who you say you are. In order to generate the certificates, certificate authority must be there.
+Certificate Authority -  A certificate authority provides the ability to confirm that a certificate is valid. A certificate authority can be used to validate any certificate that was issued using that CA.
+
+<h4> Creating the Certificate Authority </h4>
+
+Make sure you are in home directory. Create a directory using <b> mkdir </b> command.
+
+```javascript
+cd ~/
+mkdir kthw
+cd kthw/
+```
+![](images/11.png)
+
+Install cfssljson and cfssl by executing the following commands:
+
+```javascript
+sudo curl -s -L -o /bin/cfssl https://pkg.cfssl.org/R1.2/cfssl_linux-amd64
+```
+![](images/12.png)
+```javascript
+sudo curl -s -L -o /bin/cfssljson https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64
+```
+![](images/13.png)
+```javascript
+sudo curl -s -L -o /bin/cfssl-certinfo https://pkg.cfssl.org/R1.2/cfssl-certinfo_linux-amd64
+```
+![](images/14.png)
+```javascript
+sudo chmod +x /bin/cfssl*
+```
+![](images/15.png)

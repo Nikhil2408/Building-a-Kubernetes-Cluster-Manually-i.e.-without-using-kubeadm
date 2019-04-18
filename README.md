@@ -444,3 +444,15 @@ cfssl gencert \
 <b> kube-scheduler-key.pem </b> and <b> kube-scheduler.pem </b> files will be generated. Verify them using <b> ls </b> command.
 
 ![](images/31.png)
+
+<h4> c)  Generating the Kubernetes API Server Certificate </h4>
+
+We have generated all of the the client certificates our Kubernetes cluster will need, but we also need a server certificate for the Kubernetes API.
+
+Place the correct credentials from your cloud server to this CERT_HOSTNAME variable.
+
+```javascript
+CERT_HOSTNAME=10.32.0.1,<controller node 1 Private IP>,<controller node 1 hostname>,<controller node 2 Private IP>,<controller node 2 hostname>,<API load balancer Private IP>,<API load balancer hostname>,127.0.0.1,localhost,kubernetes.default
+```
+
+![](images/32.png)

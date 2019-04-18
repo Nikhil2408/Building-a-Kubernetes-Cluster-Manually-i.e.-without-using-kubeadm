@@ -34,27 +34,37 @@ In order to proceed further, first of all install two client tools on the local 
 
  <b> For cfssl: </b>
  
+ <h4> a) Retrieving files from web servers </h4>
+ 
  ```javascript
  wget -q --show-progress --https-only --timestamping \
  https://pkg.cfssl.org/R1.2/cfssl_linux-amd64 \
  https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64
  ```
   ![](images/1.png)
-  
+ 
+ <h4> b) Changing permissions for the files </h4>
+ 
 ```javascript
 chmod +x cfssl_linux-amd64 cfssljson_linux-amd64
 ```
 ![](images/2.png)
+
+<h4> c) Moving first file to appropriate location </h4>
 
 ```javascript
 sudo mv cfssl_linux-amd64 /usr/local/bin/cfssl
 ```
 ![](images/3.png)
 
+<h4> d) Moving second file to appropriate location </h4>
+
 ```javascript
 sudo mv cfssljson_linux-amd64 /usr/local/bin/cfssljson
 ```
 ![](images/4.png)
+
+<h4> e) Verifying cfssl client installation </h4>
 
 ```javascript
 cfssl version

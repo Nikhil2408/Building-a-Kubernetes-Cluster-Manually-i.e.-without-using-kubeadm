@@ -262,3 +262,185 @@ WORKER1_HOST=<Public hostname of your second worker node cloud server>
 WORKER1_IP=<Private IP of your second worker node cloud server>
 ```
 ![](images/21.png)
+
+Once your variable are set up with the correct credentials of our cloud server, execute the below command.
+
+```javascript
+{
+cat > ${WORKER0_HOST}-csr.json << EOF
+{
+  "CN": "system:node:${WORKER0_HOST}",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "US",
+      "L": "Portland",
+      "O": "system:nodes",
+      "OU": "Kubernetes The Hard Way",
+      "ST": "Oregon"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -hostname=${WORKER0_IP},${WORKER0_HOST} \
+  -profile=kubernetes \
+  ${WORKER0_HOST}-csr.json | cfssljson -bare ${WORKER0_HOST}
+
+cat > ${WORKER1_HOST}-csr.json << EOF
+{
+  "CN": "system:node:${WORKER1_HOST}",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "US",
+      "L": "Portland",
+      "O": "system:nodes",
+      "OU": "Kubernetes The Hard Way",
+      "ST": "Oregon"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -hostname=${WORKER1_IP},${WORKER1_HOST} \
+  -profile=kubernetes \
+  ${WORKER1_HOST}-csr.json | cfssljson -bare ${WORKER1_HOST}
+
+}
+```
+![](images/22.png)
+
+You can check the files generated using <b> ls </b> command. The files will be generated for each worker node separately.
+![](images/24.png)
+
+<h5> Controller Manager Client certificate </h5>
+ 
+```javascript
+{
+
+cat > kube-controller-manager-csr.json << EOF
+{
+  "CN": "system:kube-controller-manager",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "US",
+      "L": "Portland",
+      "O": "system:kube-controller-manager",
+      "OU": "Kubernetes The Hard Way",
+      "ST": "Oregon"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -profile=kubernetes \
+  kube-controller-manager-csr.json | cfssljson -bare kube-controller-manager
+
+}
+```
+
+![](images/25.png)
+
+<b> kube-controller-manager-key.pem </b> and <b> kube-controller-manager.pem </b> files will be generated. Verify them using <b> ls </b> command.
+![](images/27.png)
+
+<h5> Kube Proxy Client certificate </h5>
+
+```javascript
+{
+
+cat > kube-proxy-csr.json << EOF
+{
+  "CN": "system:kube-proxy",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "US",
+      "L": "Portland",
+      "O": "system:node-proxier",
+      "OU": "Kubernetes The Hard Way",
+      "ST": "Oregon"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -profile=kubernetes \
+  kube-proxy-csr.json | cfssljson -bare kube-proxy
+
+}
+```
+![](images/28.png)
+
+<b> kube-proxy-key.pem </b> and <b> kube-proxy.pem </b> files will be generated. Verify them using <b> ls </b> command.
+
+![](images/29.png)
+
+<h5> Kube Scheduler Client Certificate </h5>
+
+```javascript
+{
+
+cat > kube-scheduler-csr.json << EOF
+{
+  "CN": "system:kube-scheduler",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "US",
+      "L": "Portland",
+      "O": "system:kube-scheduler",
+      "OU": "Kubernetes The Hard Way",
+      "ST": "Oregon"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -profile=kubernetes \
+  kube-scheduler-csr.json | cfssljson -bare kube-scheduler
+
+}
+```
+![](images/30.png)
+
+<b> kube-scheduler-key.pem </b> and <b> kube-scheduler.pem </b> files will be generated. Verify them using <b> ls </b> command.
+
+![](images/31.png)

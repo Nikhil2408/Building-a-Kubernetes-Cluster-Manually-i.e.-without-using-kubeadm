@@ -107,11 +107,11 @@ kubectl version --client
 
 <h3> 2. Creating a Certificate Authority and TLS Certificates for  Kubernetes</h3>
 
-<b> Certificate </b> - Certificates are used to confirm identity. They are used to prove that you are who you say you are. In order to generate the certificates, certificate authority must be there.
+<b> Certificate </b> - Certificates are used to confirm identity. They are used to prove that you are who you say you are. In order to generate the certificates, certificate authority must be there. There are three types of certificates:- client certificates, K8s server API certificate and service account key pair certificate.
 
 <b> Certificate Authority </b> -  A certificate authority provides the ability to confirm that a certificate is valid. A certificate authority can be used to validate any certificate that was issued using that CA.
 
-<h4> Creating the Certificate Authority </h4>
+<h4> a) Creating the Certificate Authority </h4>
 
 Make sure you are in home directory. Create a directory using <b> mkdir </b> command.
 
@@ -186,3 +186,26 @@ cfssl gencert -initca ca-csr.json | cfssljson -bare ca
 }
 ```
 ![](images/16.png)
+
+* <b> ca-config.json </b> - It is a json config file for my certificate authority. It defines when will the CA expires and what can it be used for.
+
+* <b> ca-csr.json </b> - csr stands for certificate signing request. This json file provides the configuration of the request to sign a new certificate.
+
+
+Output for the above command will be displayed like this:
+
+![](images/17.png)
+
+To see the files created after executing the command, run <b> ls </b>. You will notice two files are created along with above two json files. One is ca-key.pem which is the private certificate for certificate authority and other one is ca.pem which is the public certificate for certificate authority.
+
+```javascript
+ls
+```
+
+![](images/18.png)
+
+<h4> b) Generating the client certificates </h4>
+
+Now, we have provisioned the certificate authority for the k8s cluster, we are ready to begin generating certificates. The first set of certificates are client certificates used by various componenets of K8s cluster. We will generate the following client certificates: <b> admin </b>, <b> kubelet </b>(one for each worker node), <b> kube-controller-manager </b>, <b> kube-proxy </b>and <b> kube-scheduler </b>.
+
+Make sure you are inside the directory you created before.

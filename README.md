@@ -456,3 +456,84 @@ CERT_HOSTNAME=10.32.0.1,<controller node 1 Private IP>,<controller node 1 hostna
 ```
 
 ![](images/32.png)
+
+This CERT_HOSTNAME variable in the json file will be replaced with credentials provided above.
+
+```javascript
+{
+
+cat > kubernetes-csr.json << EOF
+{
+  "CN": "kubernetes",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "US",
+      "L": "Portland",
+      "O": "Kubernetes",
+      "OU": "Kubernetes The Hard Way",
+      "ST": "Oregon"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -hostname=${CERT_HOSTNAME} \
+  -profile=kubernetes \
+  kubernetes-csr.json | cfssljson -bare kubernetes
+
+}
+```
+![](images/33.png)
+
+<b> kubernetes-key.pem </b> and <b> kubernetes.pem </b> files will be created. Verify them using <b> ls </b> command.
+
+![](images/34.png)
+
+<h4> d) Generating the Service Account Key Pair </h4>
+
+Kubernetes provides the ability for service accounts to authenticate using tokens. It uses a key-pair to provide signatures for those tokens.
+
+```javascript
+{
+
+cat > service-account-csr.json << EOF
+{
+  "CN": "service-accounts",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "US",
+      "L": "Portland",
+      "O": "Kubernetes",
+      "OU": "Kubernetes The Hard Way",
+      "ST": "Oregon"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -profile=kubernetes \
+  service-account-csr.json | cfssljson -bare service-account
+
+}
+```
+![](images/35.png)
+
+<b> service-account-key.pem </b> and <b> service-account.pem </b> files will be created. Verify them using <b> ls </b> command.
+
+![](images/36.png)

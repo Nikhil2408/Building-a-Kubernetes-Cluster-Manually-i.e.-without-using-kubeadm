@@ -30,11 +30,14 @@ Besides these five ubuntu servers, you will be requiring one more machine i.e. t
 
 <h3> 1. Installing the Client tools on the local machine </h3>
 
-In order to proceed further, first of all install two client tools on the local workstation. These two client tools include <b> cfssl </b> and <b> kubectl </b>.
+In order to proceed further, first of all install two client tools on the local workstation. These two client tools are:-
+
+* <b> cfssl </b>- It is a tool we are going to use to manage different certificates we will need to create in order to setup a kubernetes cluster.
+* <b> kubectl </b> - It is a tool which is used to interact with the kubernetes from our local machine.
 
  <b> For cfssl: </b>
  
- <h4> a) Retrieving files from web servers </h4>
+ <h4> a) Retrieving two binary files from web servers </h4>
  
  ```javascript
  wget -q --show-progress --https-only --timestamping \
@@ -43,7 +46,7 @@ In order to proceed further, first of all install two client tools on the local 
  ```
   ![](images/1.png)
  
- <h4> b) Changing permissions for the files </h4>
+ <h4> b) Changing permissions for the files to make them executable </h4>
  
 ```javascript
 chmod +x cfssl_linux-amd64 cfssljson_linux-amd64
@@ -73,14 +76,14 @@ cfssl version
 
 <b> For kubectl: </b>
 
-<h4> a) Retrieving kubectl file from web server </h4>
+<h4> a) Retrieving kubectl binary file from web server </h4>
 
 ```javascript
 wget https://storage.googleapis.com/kubernetes-release/release/v1.10.2/bin/linux/amd64/kubectl
 ```
 ![](images/6.png)
 
-<h4> b) Changing permission for the kubectl file </h4>
+<h4> b) Changing permission for the kubectl file to make it executable </h4>
 
 ```javascript
 chmod +x kubectl
@@ -95,12 +98,11 @@ sudo mv kubectl /usr/local/bin/
 
 <h4> d) Verifying kubectl client </h4>
 
-As we have only installed kubectl client, write
+It's very important to add <b> --client </b> flag when verifying because by default kubectl interacts with the k8s cluster which I have not setup yet. <b> --client </b> gives us the information about local kubectl setup and not remote k8s cluster.
 
 ```javascript
 kubectl version --client
 ```
-
 ![](images/9.png)
 
 <h3> 2. Creating a Certificate Authority and TLS Certificates for  Kubernetes</h3>

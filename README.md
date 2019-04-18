@@ -209,3 +209,56 @@ ls
 Now, we have provisioned the certificate authority for the k8s cluster, we are ready to begin generating certificates. The first set of certificates are client certificates used by various componenets of K8s cluster. We will generate the following client certificates: <b> admin </b>, <b> kubelet </b>(one for each worker node), <b> kube-controller-manager </b>, <b> kube-proxy </b>and <b> kube-scheduler </b>.
 
 Make sure you are inside the directory you created before.
+
+<h5> Admin Client Certificate </h5>
+
+```javascript
+{
+
+cat > admin-csr.json << EOF
+{
+  "CN": "admin",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "US",
+      "L": "Portland",
+      "O": "system:masters",
+      "OU": "Kubernetes The Hard Way",
+      "ST": "Oregon"
+    }
+  ]
+}
+EOF
+
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -profile=kubernetes \
+  admin-csr.json | cfssljson -bare admin
+
+}
+```
+![](images/19.png)
+
+Output of the above command will be:
+
+![](images/20.png)
+
+<b> admin-key.pem </b> and <b> admin.pem </b> files will be generated after executing the command. One more file be generated which is <b> admin.csr </b>. You can check the files using <b> ls </b> command.
+
+<h5> Kubelet Client Certificates </h5>
+
+For generating Kubelet Client certificates (one for each worker node), make sure to set the variable for each worker node. Enter the actual cloud server values to the variables.
+
+```javascript
+WORKER0_HOST=<Public hostname of your first worker node cloud server>
+WORKER0_IP=<Private IP of your first worker node cloud server>
+WORKER1_HOST=<Public hostname of your second worker node cloud server>
+WORKER1_IP=<Private IP of your second worker node cloud server>
+```
+![](images/21.png)

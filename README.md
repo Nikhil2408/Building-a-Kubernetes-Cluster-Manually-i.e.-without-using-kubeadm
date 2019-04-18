@@ -70,3 +70,35 @@ sudo mv cfssljson_linux-amd64 /usr/local/bin/cfssljson
 cfssl version
 ```
 ![](images/5.png)
+
+<b> For kubectl: </b>
+
+<h4> a) Retrieving kubectl file from web server </h4>
+
+```javascript
+wget https://storage.googleapis.com/kubernetes-release/release/v1.10.2/bin/linux/amd64/kubectl
+```
+![](images/6.png)
+
+<h4> b) Changing permission for the kubectl file </h4>
+
+```javascript
+chmod +x kubectl
+```
+![](images/7.png)
+<h4> c) Moving file to appropriate location </h4>
+
+```javascript
+sudo mv kubectl /usr/local/bin/
+```
+![](images/8.png)
+
+<h4> d) Verifying kubectl client </h4>
+
+As we have only installed kubectl client, write
+
+```javascript
+kubectl version --client
+```
+
+![](images/9.png)

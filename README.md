@@ -537,3 +537,34 @@ cfssl gencert \
 <b> service-account-key.pem </b> and <b> service-account.pem </b> files will be created. Verify them using <b> ls </b> command.
 
 ![](images/36.png)
+
+<h4> d) Distributing the Certificate Files </h4>
+
+Now that all of the necessary certificates have been generated, we need to move the files onto the appropriate servers.
+<b> scp </b> stands for secure copy command is used to copy files/folders between servers in secure way.
+
+<h5> Move certificates to the worker nodes </h5>
+
+```javascript
+scp ca.pem <worker 1 hostname>-key.pem <worker 1 hostname>.pem user@<worker 1 public IP>:~/
+```
+![](images/37.png)
+
+```javascript
+scp ca.pem <worker 2 hostname>-key.pem <worker 2 hostname>.pem user@<worker 2 public IP>:~/
+```
+![](images/38.png)
+
+<h5> Move certificates to the controller nodes </h5>
+
+```javascript
+scp ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \
+    service-account-key.pem service-account.pem user@<controller 1 public IP>:~/
+```
+![](images/39.png)
+
+```javascript
+scp ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \
+    service-account-key.pem service-account.pem user@<controller 2 public IP>:~/
+```
+![](images/40.png)

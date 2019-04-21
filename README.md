@@ -568,3 +568,29 @@ scp ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \
     service-account-key.pem service-account.pem user@<controller 2 public IP>:~/
 ```
 ![](images/40.png)
+
+<h3> 3. Generating Kubeconfigs for the cluster </h3>
+
+A Kubernetes configuration file, or kubeconfig is a file that stores information about clusters, users, namespaces and authentication mechanisms. It contains the configuration data needed to connect to and interact with one or more kubernetes clusters.
+
+It contains the information such as:
+* The location of the cluster you want to connect to.
+* What user you want to authenticate as.
+* Data needed in order to authenticate such as tokens or client certificates.
+
+We can even define multiple contexts in a kubeconfig file allowing you to easily switch between multiple clusters but here I will be using single context.
+
+kubeconfigs can be generated using kubectl on the local machine which you have used to generate certificates.
+* <b> kubectl config set-cluster </b> is used to set up the configuration for the location of the cluster.
+* <b> kubectl config set-credentials </b> is used to set the username and client certificates that will be used to authenticate.
+* <b> kubectl config set-context </b> default is used to set the default context.
+* <b> kubectl config use-context default </b> is used to set the current context to the configuration we have provided.
+
+<h4> a) Setting up the environment variable </h4>
+
+Create an environment variable that will store the address of the kubernetes API server and set it to the private IP address of the Kubernetes load balancer server.
+
+```javascript
+KUBERNETES_ADDRESS=<load balancer private ip>
+```
+![](images/41.png)

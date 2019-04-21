@@ -569,7 +569,7 @@ scp ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \
 ```
 ![](images/40.png)
 
-<h3> 3. Generating Kubeconfigs for the cluster </h3>
+<h3> 3. Generating Kubeconfigs for the cluster and distributing files to the cloud servers </h3>
 
 A Kubernetes configuration file, or kubeconfig is a file that stores information about clusters, users, namespaces and authentication mechanisms. It contains the configuration data needed to connect to and interact with one or more kubernetes clusters.
 
@@ -589,8 +589,158 @@ kubeconfigs can be generated using kubectl on the local machine which you have u
 <h4> a) Setting up the environment variable </h4>
 
 Create an environment variable that will store the address of the kubernetes API server and set it to the private IP address of the Kubernetes load balancer server.
+This variable is used to determine where our kubelet service is going to locate the k8s API.
 
 ```javascript
 KUBERNETES_ADDRESS=<load balancer private ip>
 ```
 ![](images/41.png)
+
+<h4> b) Generating the kubeconfig files </h4>
+
+<h5> Creating the kubelet kubeconfig for each worker node </h5>
+
+Remeber to replace all the placeholders with your cloud servers credentials.
+
+```javascript
+for instance in <worker 1 hostname> <worker 2 hostname>; do
+  kubectl config set-cluster kubernetes-the-hard-way \
+    --certificate-authority=ca.pem \
+    --embed-certs=true \
+    --server=https://${KUBERNETES_ADDRESS}:6443 \
+    --kubeconfig=${instance}.kubeconfig
+
+  kubectl config set-credentials system:node:${instance} \
+    --client-certificate=${instance}.pem \
+    --client-key=${instance}-key.pem \
+    --embed-certs=true \
+    --kubeconfig=${instance}.kubeconfig
+
+  kubectl config set-context default \
+    --cluster=kubernetes-the-hard-way \
+    --user=system:node:${instance} \
+    --kubeconfig=${instance}.kubeconfig
+
+  kubectl config use-context default --kubeconfig=${instance}.kubeconfig
+done
+```
+![](images/42.png)
+
+After generating the kubelet kube-config use cat command to see the configuration file of a particular worker node
+
+![](images/43.png)
+
+<h5> Creating the kube-proxy kubeconfig </h5>
+
+```javascript
+{
+  kubectl config set-cluster kubernetes-the-hard-way \
+    --certificate-authority=ca.pem \
+    --embed-certs=true \
+    --server=https://${KUBERNETES_ADDRESS}:6443 \
+    --kubeconfig=kube-proxy.kubeconfig
+
+  kubectl config set-credentials system:kube-proxy \
+    --client-certificate=kube-proxy.pem \
+    --client-key=kube-proxy-key.pem \
+    --embed-certs=true \
+    --kubeconfig=kube-proxy.kubeconfig
+
+  kubectl config set-context default \
+    --cluster=kubernetes-the-hard-way \
+    --user=system:kube-proxy \
+    --kubeconfig=kube-proxy.kubeconfig
+
+  kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig
+}
+```
+![](images/44.png)
+
+<h5> Creating the kube-controller-manager kubeconfig </h5>
+
+Here I am using localhost because kube-controller-manager component is present in the same cloud server where API server is there. You can refer the architecture which I have shown at the starting of this guide.
+
+```javascript
+{
+  kubectl config set-cluster kubernetes-the-hard-way \
+    --certificate-authority=ca.pem \
+    --embed-certs=true \
+    --server=https://127.0.0.1:6443 \
+    --kubeconfig=kube-controller-manager.kubeconfig
+
+  kubectl config set-credentials system:kube-controller-manager \
+    --client-certificate=kube-controller-manager.pem \
+    --client-key=kube-controller-manager-key.pem \
+    --embed-certs=true \
+    --kubeconfig=kube-controller-manager.kubeconfig
+
+  kubectl config set-context default \
+    --cluster=kubernetes-the-hard-way \
+    --user=system:kube-controller-manager \
+    --kubeconfig=kube-controller-manager.kubeconfig
+
+  kubectl config use-context default --kubeconfig=kube-controller-manager.kubeconfig
+}
+```
+![](images/45.png)
+
+You can verify creation of kube-controller-manager config file using <b> ls </b> command.
+![](images/46.png)
+
+<h5> Creating the kube-scheduler kubeconfig </h5>
+
+```javascript
+{
+  kubectl config set-cluster kubernetes-the-hard-way \
+    --certificate-authority=ca.pem \
+    --embed-certs=true \
+    --server=https://127.0.0.1:6443 \
+    --kubeconfig=kube-scheduler.kubeconfig
+
+  kubectl config set-credentials system:kube-scheduler \
+    --client-certificate=kube-scheduler.pem \
+    --client-key=kube-scheduler-key.pem \
+    --embed-certs=true \
+    --kubeconfig=kube-scheduler.kubeconfig
+
+  kubectl config set-context default \
+    --cluster=kubernetes-the-hard-way \
+    --user=system:kube-scheduler \
+    --kubeconfig=kube-scheduler.kubeconfig
+
+  kubectl config use-context default --kubeconfig=kube-scheduler.kubeconfig
+}
+```
+![](images/47.png)
+
+You can verify creation of kube-scheduler config file using <b> ls </b> command.
+![](images/48.png)
+
+<h5> Creating the admin kubeconfig </h5>
+
+```javascript
+{
+  kubectl config set-cluster kubernetes-the-hard-way \
+    --certificate-authority=ca.pem \
+    --embed-certs=true \
+    --server=https://127.0.0.1:6443 \
+    --kubeconfig=admin.kubeconfig
+
+  kubectl config set-credentials admin \
+    --client-certificate=admin.pem \
+    --client-key=admin-key.pem \
+    --embed-certs=true \
+    --kubeconfig=admin.kubeconfig
+
+  kubectl config set-context default \
+    --cluster=kubernetes-the-hard-way \
+    --user=admin \
+    --kubeconfig=admin.kubeconfig
+
+  kubectl config use-context default --kubeconfig=admin.kubeconfig
+}
+```
+![](images/49.png)
+
+You can verify creation of admin config file using <b> ls </b> command.
+![](images/50.png)

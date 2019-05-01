@@ -1013,7 +1013,7 @@ Control plane components make global decisions about the cluster(i.e. scheduling
 * kube-controller-manager
 * kube-scheduler
 
-The below commands must be executed on both the controller nodes.
+In this step we will install each component of control plane on each controller node. The below commands must be executed on both the controller nodes.
 
 <h4> Create a confiuration directory </h4>
 

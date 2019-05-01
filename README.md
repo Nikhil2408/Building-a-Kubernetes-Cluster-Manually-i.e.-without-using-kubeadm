@@ -834,3 +834,163 @@ scp encryption-config.yaml user@<controller 2 public ip>:~/
 ![](images/60.png)
 
 <h3> 5. Bootstrapping the etcd Cluster </h3>
+
+etcd is a distributed key value store that provides a reliable way to store data across a cluster of machines. etcd provides a way to store data across a distributed cluster of machines and make sure the data is synchronized across all machines.
+
+Kubernetes used etcd to store all of its internal data about cluster state. We will install etcd on each of our controller node and create an etcd cluster that include all of those controller nodes.
+
+The commands in this step must be run on each controller node. Wherever there will be a difference in the commands between controller nodes, I will show you.
+
+<h4> a) Downloading etcd binary files </h4>
+
+```javascript
+wget -q --show-progress --https-only --timestamping \
+  "https://github.com/coreos/etcd/releases/download/v3.3.5/etcd-v3.3.5-linux-amd64.tar.gz"
+```
+![](images/61.png)
+
+<h4> b) Extracting the downloaded archive file </h4>
+
+```javascript
+tar -xvf etcd-v3.3.5-linux-amd64.tar.gz
+```
+![](images/62.png)
+
+<h4> c) Moving the contents of archive file to appropriate location </h4>
+
+```javascript
+sudo mv etcd-v3.3.5-linux-amd64/etcd* /usr/local/bin/
+```
+![](images/63.png)
+
+<h4> d) Create some directories </h4>
+
+```javascript
+sudo mkdir -p /etc/etcd /var/lib/etcd
+```
+![](images/64.png)
+
+<h4> e) Copying some certificates files to etcd directory </h4>
+
+Use ls command to list out all certificate files present in that controller node.
+
+```javascript
+sudo cp ca.pem kubernetes-key.pem kubernetes.pem /etc/etcd/
+```
+![](images/65.png)
+
+<h4> f) Setting up some environment variables </h4>
+
+<b> On controller node 1: </b>
+
+```javascript
+ETCD_NAME=<cloud server hostname>
+```
+![](images/66.png)
+
+```javascript
+INTERNAL_IP=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
+```
+![](images/68.png)
+
+```javascript
+INITIAL_CLUSTER=<controller 1 hostname>=https://<controller 1 private ip>:2380,<controller 2 hostname>=https://<controller 2 private ip>:2380
+```
+![](images/70.png)
+
+<b> On controller node 2: </b>
+
+
+```javascript
+ETCD_NAME=<cloud server hostname>
+```
+![](images/67.png)
+
+```javascript
+INTERNAL_IP=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
+```
+![](images/69.png)
+
+```javascript
+INITIAL_CLUSTER=<controller 1 hostname>=https://<controller 1 private ip>:2380,<controller 2 hostname>=https://<controller 2 private ip>:2380
+```
+![](images/71.png)
+
+<h4> g) Create a systemd unit file for etcd </h4>
+
+This command uses the environment variables created in the previous step.
+
+```javascript
+cat << EOF | sudo tee /etc/systemd/system/etcd.service
+[Unit]
+Description=etcd
+Documentation=https://github.com/coreos
+
+[Service]
+ExecStart=/usr/local/bin/etcd \\
+  --name ${ETCD_NAME} \\
+  --cert-file=/etc/etcd/kubernetes.pem \\
+  --key-file=/etc/etcd/kubernetes-key.pem \\
+  --peer-cert-file=/etc/etcd/kubernetes.pem \\
+  --peer-key-file=/etc/etcd/kubernetes-key.pem \\
+  --trusted-ca-file=/etc/etcd/ca.pem \\
+  --peer-trusted-ca-file=/etc/etcd/ca.pem \\
+  --peer-client-cert-auth \\
+  --client-cert-auth \\
+  --initial-advertise-peer-urls https://${INTERNAL_IP}:2380 \\
+  --listen-peer-urls https://${INTERNAL_IP}:2380 \\
+  --listen-client-urls https://${INTERNAL_IP}:2379,https://127.0.0.1:2379 \\
+  --advertise-client-urls https://${INTERNAL_IP}:2379 \\
+  --initial-cluster-token etcd-cluster-0 \\
+  --initial-cluster ${INITIAL_CLUSTER} \\
+  --initial-cluster-state new \\
+  --data-dir=/var/lib/etcd
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+![](images/72.png)
+
+<b> Output of 1st controller node: </b>
+![](images/73.png)
+
+<b> Output of 2nd controller node: </b>
+![](images/74.png)
+
+<h4> g) Start and enable the etcd service </h4>
+
+```javascript
+sudo systemctl daemon-reload
+```
+![](images/75.png)
+
+```javascript
+sudo systemctl enable etcd
+```
+![](images/76.png)
+
+```javascript
+sudo systemctl start etcd
+```
+![](images/77.png)
+
+Verify that the etcd service started up successfully or not.
+
+```javascript
+sudo systemctl status etcd
+```
+![](images/78.png)
+
+<h4> h) Verify that etcd is working correctly or not </h4>
+
+The output should list your two etcd nodes:
+
+<b> For 1st controller node: </b>
+![](images/79.png)
+
+<b> For 2nd controller node: </b>
+![](images/80.png)
+

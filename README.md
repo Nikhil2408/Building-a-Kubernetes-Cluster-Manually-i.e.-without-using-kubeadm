@@ -832,3 +832,5 @@ scp encryption-config.yaml user@<controller 1 public ip>:~/
 scp encryption-config.yaml user@<controller 2 public ip>:~/
 ```
 ![](images/60.png)
+
+<h3> 5. Bootstrapping the etcd Cluster </h3>

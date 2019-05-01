@@ -1002,3 +1002,4 @@ sudo ETCDCTL_API=3 etcdctl member list \
 <b> For 2nd controller node: </b>
 ![](images/80.png)
 
+<h3> 6. Bootstrapping the Kubernetes Control Plane </h3>

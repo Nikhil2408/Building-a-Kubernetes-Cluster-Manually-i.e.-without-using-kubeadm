@@ -750,3 +750,27 @@ You can verify creation of admin config file using <b> ls </b> command.
 Now that we have generated the kubeconfig files that we will need in order to configure our Kubernetes cluster, we need to make sure that each cloud server has a copy of the kubeconfig files. We will distribute the kubeconfig files to each of the worker and controller nodes.
 
 Make sure to replace all the placeholders with the actual values from your cloud servers.
+
+<h5> Move certificates to the worker nodes </h5>
+
+```javascript
+scp <worker 1 hostname>.kubeconfig kube-proxy.kubeconfig user@<worker 1 public IP>:~/
+```
+![](images/51.png)
+
+```javascript
+scp <worker 2 hostname>.kubeconfig kube-proxy.kubeconfig user@<worker 2 public IP>:~/
+```
+![](images/52.png)
+
+<h5> Move certificates to the controller nodes </h5>
+
+```javascript
+scp admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig user@<controller 1 public IP>:~/
+```
+![](images/53.png)
+
+```javascript
+scp admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig user@<controller 2 public IP>:~/
+```
+![](images/54.png)

@@ -1015,8 +1015,37 @@ Control plane components make global decisions about the cluster(i.e. scheduling
 
 In this step we will install each component of control plane on each controller node. The below commands must be executed on both the controller nodes.
 
-<h4> Create a confiuration directory </h4>
+<h4> a) Create a confiuration directory </h4>
 
 ```javascript
 sudo mkdir -p /etc/kubernetes/config
 ```
+![](images/81.png)
+
+<h4> b) Downloading binary files of components of control plane </h4>
+
+We will also download kubectl binary file although that is not the component of control plane. It is necessary to have kubectl on controller node to interact with the K8s cluster when the cluster is ready.
+
+```javascript
+wget -q --show-progress --https-only --timestamping \
+  "https://storage.googleapis.com/kubernetes-release/release/v1.10.2/bin/linux/amd64/kube-apiserver" \
+  "https://storage.googleapis.com/kubernetes-release/release/v1.10.2/bin/linux/amd64/kube-controller-manager" \
+  "https://storage.googleapis.com/kubernetes-release/release/v1.10.2/bin/linux/amd64/kube-scheduler" \
+  "https://storage.googleapis.com/kubernetes-release/release/v1.10.2/bin/linux/amd64/kubectl"
+```
+![](images/82.png)
+
+<h4> c) Changing permissions for the files to make them executable </h4>
+
+```javascript
+chmod +x kube-apiserver kube-controller-manager kube-scheduler kubectl
+```
+![](images/83.png)
+
+<h4> d) Moving each component file to appropriate location </h4>
+
+```javascript
+sudo mv kube-apiserver kube-controller-manager kube-scheduler kubectl /usr/local/bin/
+```
+![](images/84.png)
+

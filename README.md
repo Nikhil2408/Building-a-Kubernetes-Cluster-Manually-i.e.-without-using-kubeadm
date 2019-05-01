@@ -988,6 +988,14 @@ sudo systemctl status etcd
 
 The output should list your two etcd nodes:
 
+```javascript
+sudo ETCDCTL_API=3 etcdctl member list \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/etcd/ca.pem \
+  --cert=/etc/etcd/kubernetes.pem \
+  --key=/etc/etcd/kubernetes-key.pem
+```
+
 <b> For 1st controller node: </b>
 ![](images/79.png)
 

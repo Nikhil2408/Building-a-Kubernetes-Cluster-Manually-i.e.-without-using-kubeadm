@@ -1003,3 +1003,20 @@ sudo ETCDCTL_API=3 etcdctl member list \
 ![](images/80.png)
 
 <h3> 6. Bootstrapping the Kubernetes Control Plane </h3>
+
+The kubernetes Control plane is a set of services that control the K8s cluster. Like many orchestration products, k8s has control servers and worker servers.
+Control plane components make global decisions about the cluster(i.e. scheduling) and detect and respond to cluster events(i.e. starting up a new pod when a replication controller's replicas field is unsatisfied).
+
+<b> Components of K8s Control Plane: </b>
+* kube-api server
+* etcd 
+* kube-controller-manager
+* kube-scheduler
+
+The below commands must be executed on both the controller nodes.
+
+<h4> Create a confiuration directory </h4>
+
+```javascript
+sudo mkdir -p /etc/kubernetes/config
+```

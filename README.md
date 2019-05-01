@@ -745,7 +745,7 @@ You can verify creation of kube-scheduler config file using <b> ls </b> command.
 You can verify creation of admin config file using <b> ls </b> command.
 ![](images/50.png)
 
-<h4> Distributing the kubeconfig files </h4>
+<h4> c) Distributing the kubeconfig files </h4>
 
 Now that we have generated the kubeconfig files that we will need in order to configure our Kubernetes cluster, we need to make sure that each cloud server has a copy of the kubeconfig files. We will distribute the kubeconfig files to each of the worker and controller nodes.
 

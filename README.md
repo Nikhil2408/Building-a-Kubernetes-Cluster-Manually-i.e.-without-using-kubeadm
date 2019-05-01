@@ -774,3 +774,61 @@ scp admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfi
 scp admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig user@<controller 2 public IP>:~/
 ```
 ![](images/54.png)
+
+<h3> 4. Generating Data Encryption Config and distributing them to controller servers </h3>
+
+Our important security practice is to ensure that sensitive data is never stored in plain text. Kubernetes offers the ability to encrypt sensitive data when it is stored.
+
+In order to use this feature it is necessary to provide K8s with a data encryption config containing an encryption config.
+
+<h4> a) Create an environment variable which stores the encrytion key </h4>
+
+It will randomnly generate the characters and I have taken first 32 characters in encryption key.
+
+```javascript
+ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64)
+```
+![](images/55.png)
+
+Verify your encryption key
+
+![](images/56.png)
+
+<h4> b) Creating the encryption-config yaml file </h4>
+
+```javascript
+cat > encryption-config.yaml << EOF
+kind: EncryptionConfig
+apiVersion: v1
+resources:
+  - resources:
+      - secrets
+    providers:
+      - aescbc:
+          keys:
+            - name: key1
+              secret: ${ENCRYPTION_KEY}
+      - identity: {}
+EOF
+```
+![](images/57.png)
+
+Verify the encryption-config file using ls command.
+
+![](images/58.png)
+
+<h4> c) Distributing the Data Encryption config file to controller nodes</h4>
+
+<h5> First controller node </h5>
+
+```javascript
+scp encryption-config.yaml user@<controller 1 public ip>:~/
+```
+![](images/59.png)
+
+<h5> Second controller node </h5>
+
+```javascript
+scp encryption-config.yaml user@<controller 2 public ip>:~/
+```
+![](images/60.png)

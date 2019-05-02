@@ -1251,3 +1251,5 @@ Use kubectl to check componentstatuses and I am passing admin.kubeconfig to auth
 kubectl get componentstatuses --kubeconfig admin.kubeconfig
 ```
 ![](images/101.png)
+
+<b> Set up RBAC for Kubelet Authorization </b>

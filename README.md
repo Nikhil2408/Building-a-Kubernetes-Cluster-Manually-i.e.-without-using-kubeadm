@@ -1252,4 +1252,56 @@ kubectl get componentstatuses --kubeconfig admin.kubeconfig
 ```
 ![](images/101.png)
 
-<b> Set up RBAC for Kubelet Authorization </b>
+<b> Setting up RBAC (Role-Based Access Control) for Kubelet Authorization </b>
+
+It is a mechanism we used in K8s to create roles and assign permission to different users. Its the way to do authorization. We need to make sure that the K8s API has permissions to access the kubelet API on each worker node and perform certain common tasks. We will create a ClusterRole with the necessary permissions and assign the role to the K8s user with a ClusterRoleBinding.
+
+<b> Note: </b> These commands only need to be run on one control node.
+
+<h4> a) Create a role with the necessary permissions </h4>
+
+```javascript
+cat << EOF | kubectl apply --kubeconfig admin.kubeconfig -f -
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+  name: system:kube-apiserver-to-kubelet
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes/proxy
+      - nodes/stats
+      - nodes/log
+      - nodes/spec
+      - nodes/metrics
+    verbs:
+      - "*"
+EOF
+```
+![](images/102.png)
+
+<h4> b) Bind the role to the kubernetes user </h4>
+
+```javascript
+cat << EOF | kubectl apply --kubeconfig admin.kubeconfig -f -
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: system:kube-apiserver
+  namespace: ""
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:kube-apiserver-to-kubelet
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: kubernetes
+EOF
+```
+![](images/103.png)

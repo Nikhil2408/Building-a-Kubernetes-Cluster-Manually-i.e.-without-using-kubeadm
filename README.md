@@ -1049,7 +1049,7 @@ sudo mv kube-apiserver kube-controller-manager kube-scheduler kubectl /usr/local
 ```
 ![](images/84.png)
 
-<b> Configuring kube-api server </b>
+<b> Setting up the kube-api server </b>
 
 The Kubernetes API server provides the primary interface for the Kubernetes control plane and the cluster as a whole. When you interact with Kubernetes, you are nearly always doing it through the Kubernetes API server. 
 
@@ -1104,7 +1104,7 @@ ExecStart=/usr/local/bin/kube-apiserver \\
   --authorization-mode=Node,RBAC \\
   --bind-address=0.0.0.0 \\
   --client-ca-file=/var/lib/kubernetes/ca.pem \\
-  --enable-admission-plugins=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \\
+  --enable-.dmission-plugins=Initializers,NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \\
   --enable-swagger-ui=true \\
   --etcd-cafile=/var/lib/kubernetes/ca.pem \\
   --etcd-certfile=/var/lib/kubernetes/kubernetes.pem \\
@@ -1132,3 +1132,122 @@ WantedBy=multi-user.target
 EOF
 ```
 ![](images/89.png)
+
+<b> Setting up the kube-controller manager </b>
+
+<h4> a) Copy kube-controller manager config file to the directory which we have made in the previous step </h4>
+
+```javascript
+sudo cp kube-controller-manager.kubeconfig /var/lib/kubernetes/
+```
+![](images/90.png)
+
+<h4> b) Create a systemd unit file for kube-controller manager </h4>
+
+```javascript
+cat << EOF | sudo tee /etc/systemd/system/kube-controller-manager.service
+[Unit]
+Description=Kubernetes Controller Manager
+Documentation=https://github.com/kubernetes/kubernetes
+
+[Service]
+ExecStart=/usr/local/bin/kube-controller-manager \\
+  --address=0.0.0.0 \\
+  --cluster-cidr=10.200.0.0/16 \\
+  --cluster-name=kubernetes \\
+  --cluster-signing-cert-file=/var/lib/kubernetes/ca.pem \\
+  --cluster-signing-key-file=/var/lib/kubernetes/ca-key.pem \\
+  --kubeconfig=/var/lib/kubernetes/kube-controller-manager.kubeconfig \\
+  --leader-elect=true \\
+  --root-ca-file=/var/lib/kubernetes/ca.pem \\
+  --service-account-private-key-file=/var/lib/kubernetes/service-account-key.pem \\
+  --service-cluster-ip-range=10.32.0.0/24 \\
+  --use-service-account-credentials=true \\
+  --v=2
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+![](images/91.png)
+
+<b> Setting up the kube-scheduler </b>
+
+<h4> a) Copy kube-scheduler config file to the same directory </h4>
+
+```javascript
+sudo cp kube-scheduler.kubeconfig /var/lib/kubernetes/
+```
+![](images/92.png)
+
+<h4> b) Generate the kube-scheduler yaml config file </h4>
+
+```javascript
+cat << EOF | sudo tee /etc/kubernetes/config/kube-scheduler.yaml
+apiVersion: componentconfig/v1alpha1
+kind: KubeSchedulerConfiguration
+clientConnection:
+  kubeconfig: "/var/lib/kubernetes/kube-scheduler.kubeconfig"
+leaderElection:
+  leaderElect: true
+EOF
+```
+![](images/93.png)
+
+<h4> c) Create a systemd unit file for kube-scheduler </h4>
+
+```javacsript
+cat << EOF | sudo tee /etc/systemd/system/kube-scheduler.service
+[Unit]
+Description=Kubernetes Scheduler
+Documentation=https://github.com/kubernetes/kubernetes
+
+[Service]
+ExecStart=/usr/local/bin/kube-scheduler \\
+  --config=/etc/kubernetes/config/kube-scheduler.yaml \\
+  --v=2
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+![](images/94.png)
+
+Now that we have setup all the control plane components we will enable and start all the components.
+
+```javascript
+sudo systemctl daemon-reload
+```
+![](images/95.png)
+
+```javascript
+sudo systemctl enable kube-apiserver kube-controller-manager kube-scheduler
+```
+![](images/96.png)
+
+```javascript
+sudo systemctl start kube-apiserver kube-controller-manager kube-scheduler
+```
+![](images/97.png)
+
+After starting all the components, it's good to verify all the components are working or not. Make sure all the services are active.
+
+```javascript
+sudo systemctl status kube-apiserver kube-controller-manager kube-scheduler
+```
+![](images/98.png)
+
+![](images/99.png)
+
+![](images/100.png)
+
+Use kubectl to check componentstatuses and I am passing admin.kubeconfig to authenticate myself to the K8s API Server.
+
+```javascript
+kubectl get componentstatuses --kubeconfig admin.kubeconfig
+```
+![](images/101.png)

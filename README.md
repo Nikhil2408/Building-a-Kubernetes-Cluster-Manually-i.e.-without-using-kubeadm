@@ -1310,3 +1310,90 @@ EOF
 
 In order to achieve redundancy for your Kubernetes cluster, you will need to load balance usage of the Kubernetes API across multiple control nodes.
 
+<b> Note: </b>Run these on the server that you have designated as your load balancer server.
+
+<h4> a) Install Nginx </h4>
+
+```javascript
+sudo apt-get install -y nginx
+```
+![](images/104.png)
+
+<h4> b) Making sure Nginx starts automatically when our server starts </h4>
+
+```javascript
+sudo systemctl enable nginx
+```
+![](images/105.png)
+
+You can also check the status of our nginx.
+
+```javascript
+sudo systemctl status nginx
+```
+
+<h4> c) Create a directory to store tcp streams </h4>
+
+```javascript
+sudo mkdir -p /etc/nginx/tcpconf.d
+```
+![](images/106.png)
+
+<h4> d) Edit the main Nginx config file </h4>
+
+Write the below command to open the config file in the vi editor.
+
+```javascript
+sudo vi /etc/nginx/nginx.conf
+```
+
+This will open the vi editor. At the end of the file we have to add one line -> <b> include /etc/nginx/tcpconf.d/*; </b>
+It will include all the things present in tcpconf.d directory. Save the file after editing it.
+
+![](images/107.png)
+
+<h4> e) Set up some environment variables for the load balancer config file </h4>
+
+```javascript
+CONTROLLER0_IP=<controller 0 private ip>
+CONTROLLER1_IP=<controller 1 private ip>
+```
+![](images/108.png)
+
+<h4> f) Create the load balancer nginx config file </h4>
+
+```javascript
+cat << EOF | sudo tee /etc/nginx/tcpconf.d/kubernetes.conf
+stream {
+    upstream kubernetes {
+        server $CONTROLLER0_IP:6443;
+        server $CONTROLLER1_IP:6443;
+    }
+
+    server {
+        listen 6443;
+        listen 443;
+        proxy_pass kubernetes;
+    }
+}
+EOF
+```
+![](images/109.png)
+
+<h4> g) Reload the configuration </h4>
+
+```javascript
+sudo nginx -s reload
+```
+![](images/110.png)
+
+<h4> i) Verifying that the load balancer is working or not </h4>
+
+Making a request to the nginx server that is running on this server. But the nginx server is configured to forward that request to one of the controller nodes. 
+
+```javascript
+curl -k https://localhost:6443/version
+```
+
+The response will be some JSON format containing version information about our cluster.
+![](images/111.png)

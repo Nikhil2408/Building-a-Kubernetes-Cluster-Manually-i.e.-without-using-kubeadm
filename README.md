@@ -1305,3 +1305,8 @@ subjects:
 EOF
 ```
 ![](images/103.png)
+
+<b> Setting up a Kube API Frontend Load Balancer </b>
+
+In order to achieve redundancy for your Kubernetes cluster, you will need to load balance usage of the Kubernetes API across multiple control nodes.
+

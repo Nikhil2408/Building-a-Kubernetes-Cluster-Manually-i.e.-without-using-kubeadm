@@ -1,4 +1,4 @@
-# JustTrying
+# Building a Kubernetes Cluster Manually
 
 This repository represents the manual installation of Kubernetes i.e without using kubeadm. I have also done the installation using kubeadm. 
 

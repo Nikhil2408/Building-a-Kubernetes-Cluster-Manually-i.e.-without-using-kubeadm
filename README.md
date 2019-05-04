@@ -17,7 +17,7 @@ Kubernetes (K8s) is an open-source system for automating deployment, scaling, an
 <h2> Architecture Implemented </h2>
 
 <p align="center">
-  <img src="https://github.com/Nikhil2408/JustTrying/blob/master/images/k8s%20manual%20arch.png" width="650" height="550">
+  <img src="https://github.com/Nikhil2408/Building-a-Kubernetes-Cluster-Manually-i.e.-without-using-kubeadm/blob/master/images/k8s%20manual%20arch.png" width="650" height="550">
 </p>
 
 <h2> Requirements </h2>

@@ -1397,3 +1397,325 @@ curl -k https://localhost:6443/version
 
 The response will be some JSON format containing version information about our cluster.
 ![](images/111.png)
+
+<h3> 6. Bootstrapping the Kubernetes Worker Nodes </h3>
+
+These are the servers which are responsible for the actual work of running containers applications managed by K8s. Control Plane is responsible fo automating and orchestrating the usage of containers.
+The kubernetes worker node has the services necessary to run applications containers and be managed from the master systems.
+
+<b> Components of K8s Worker Nodes: </b>
+* kubelet
+* containerd
+* kube-proxy
+
+<b>Note:</b>  Run these commands on both worker nodes.
+
+<h4> a) Download some packages before downloading component binaries </h4>
+
+```javascript
+sudo apt-get -y install socat conntrack ipset
+```
+![](images/112.png)
+
+
+<h4> b) Download binary files and some dependency software </h4>
+
+<b> crictl</b>,<b> runsc</b>,<b> runc.amd64</b> and <b> cni-plugins-amd64 </b> are some dependecy software.
+
+```javascript
+wget -q --show-progress --https-only --timestamping \
+  https://github.com/kubernetes-incubator/cri-tools/releases/download/v1.0.0-beta.0/crictl-v1.0.0-beta.0-linux-amd64.tar.gz \
+  https://storage.googleapis.com/kubernetes-the-hard-way/runsc \
+  https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64 \
+  https://github.com/containernetworking/plugins/releases/download/v0.6.0/cni-plugins-amd64-v0.6.0.tgz \
+  https://github.com/containerd/containerd/releases/download/v1.1.0/containerd-1.1.0.linux-amd64.tar.gz \
+  https://storage.googleapis.com/kubernetes-release/release/v1.10.2/bin/linux/amd64/kubectl \
+  https://storage.googleapis.com/kubernetes-release/release/v1.10.2/bin/linux/amd64/kube-proxy \
+  https://storage.googleapis.com/kubernetes-release/release/v1.10.2/bin/linux/amd64/kubelet
+```
+![](images/113.png)
+
+<h4> c) Create some directories </h4>
+
+```javascript
+sudo mkdir -p \
+  /etc/cni/net.d \
+  /opt/cni/bin \
+  /var/lib/kubelet \
+  /var/lib/kube-proxy \
+  /var/lib/kubernetes \
+  /var/run/kubernetes
+  
+```
+![](images/114.png)
+
+<h4> d) Make some binary files executable </h4>
+
+```javascript
+chmod +x kubectl kube-proxy kubelet runc.amd64 runsc
+```
+![](images/115.png)
+
+<h4> e) Rename runc.amd64 to runc  </h4>
+
+```javascript
+sudo mv runc.amd64 runc
+```
+![](images/116.png)
+
+<h4> f) Moving files to approriate location </h4>
+
+```javascript
+sudo mv kubectl kube-proxy kubelet runc runsc /usr/local/bin/
+```
+![](images/117.png)
+
+<h4> f) Extract crictl archive file </h4>
+
+```javascript
+sudo tar -xvf crictl-v1.0.0-beta.0-linux-amd64.tar.gz -C /usr/local/bin/
+```
+![](images/118.png)
+
+<h4> g) Extract cni-plugins-amd64 archive file </h4>
+
+```javascript
+sudo tar -xvf cni-plugins-amd64-v0.6.0.tgz -C /opt/cni/bin/
+```
+![](images/119.png)
+
+<h4> i) Extract containerd archive file </h4>
+
+```javascript
+sudo tar -xvf containerd-1.1.0.linux-amd64.tar.gz -C /
+```
+![](images/120.png)
+
+
+<b> Configuring Containerd </b>
+
+Containerd is the container runtime used to run containers managed by Kubernetes. We can also use Docker but here I have used containerd.
+
+<h4> a) Create a directory </h4>
+
+```javascript
+sudo mkdir -p /etc/containerd/
+```
+![](images/121.png)
+
+<h4> b) Create the containerd config.toml </h4>
+
+```javascript
+cat << EOF | sudo tee /etc/containerd/config.taml
+[plugins]
+  [plugins.cri.containerd]
+    snapshotter = "overlayfs"
+    [plugins.cri.containerd.default_runtime]
+      runtime_type = "io.containerd.runtime.v1.linux"
+      runtime_engine = "/usr/local/bin/runc"
+      runtime_root = ""
+    [plugins.cri.containerd.untrusted_workload_runtime]
+      runtime_type = "io.containerd.runtime.v1.linux"
+      runtime_engine = "/usr/local/bin/runsc"
+      runtime_root = "/run/containerd/runsc"
+EOF
+```
+![](images/122.png)
+
+<h4> c) Create the containerd systemd unit file </h4>
+
+This containerd service will be used to run containerd as a component of each worker node
+
+```javascript
+cat << EOF | sudo tee /etc/systemd/system/containerd.service
+[Unit]
+Description=containerd container runtime
+Documentation=https://containerd.io
+After=network.target
+
+[Service]
+ExecStartPre=/sbin/modprobe overlay
+ExecStart=/bin/containerd
+Restart=always
+RestartSec=5
+Delegate=yes
+KillMode=process
+OOMScoreAdjust=-999
+LimitNOFILE=1048576
+LimitNPROC=infinity
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+![](images/123.png)
+
+<b> Configuring Kubelet </b>
+
+Kubelet is the Kubernetes agent which runs on each worker node. Acting as a middleman between the Kubernetes control plane and the underlying container runtime, it coordinates the running of containers on the worker node.
+
+<h4> a) Create an environment variable </h4>
+
+Set a HOSTNAME environment variable that will be used to generate your config files. Make sure you set the HOSTNAME appropriately for each worker node.
+
+```javascript
+HOSTNAME=$(hostname)
+```
+![](images/124.png)
+
+<h4> b) Moving client certificates i.e key.pem and .pem file of that worker node to appropriate location </h4>
+
+```javascript
+sudo mv ${HOSTNAME}-key.pem ${HOSTNAME}.pem /var/lib/kubelet/
+```
+![](images/125.png)
+
+<h4> c) Moving kubeconfig file of that worker node to appropriate location and renaming it </h4>
+
+```javascript
+sudo mv ${HOSTNAME}.kubeconfig /var/lib/kubelet/kubeconfig
+```
+![](images/126.png)
+
+<h4> d) Moving certificate authority cerificate to appropriate location </h4>
+
+```javascript
+sudo mv ca.pem /var/lib/kubernetes/
+```
+![](images/127.png)
+
+<h4> e) Create the kubelet config file </h4>
+
+```javascript
+cat << EOF | sudo tee /var/lib/kubelet/kubelet-config.yaml
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+authentication:
+  anonymous:
+    enabled: false
+  webhook:
+    enabled: true
+  x509:
+    clientCAFile: "/var/lib/kubernetes/ca.pem"
+authorization:
+  mode: Webhook
+clusterDomain: "cluster.local"
+clusterDNS: 
+  - "10.32.0.10"
+runtimeRequestTimeout: "15m"
+tlsCertFile: "/var/lib/kubelet/${HOSTNAME}.pem"
+tlsPrivateKeyFile: "/var/lib/kubelet/${HOSTNAME}-key.pem"
+EOF
+```
+![](images/128.png)
+
+<h4> f) Create the kubelet systemd unit file </h4>
+
+```javascript
+cat << EOF | sudo tee /etc/systemd/system/kubelet.service
+[Unit]
+Description=Kubernetes Kubelet
+Documentation=https://github.com/kubernetes/kubernetes
+After=containerd.service
+Requires=containerd.service
+
+[Service]
+ExecStart=/usr/local/bin/kubelet \\
+  --config=/var/lib/kubelet/kubelet-config.yaml \\
+  --container-runtime=remote \\
+  --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \\
+  --image-pull-progress-deadline=2m \\
+  --kubeconfig=/var/lib/kubelet/kubeconfig \\
+  --network-plugin=cni \\
+  --register-node=true \\
+  --v=2 \\
+  --hostname-override=${HOSTNAME} \\
+  --allow-privileged=true
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+![](images/129.png)
+
+<b> Configuring Kube-proxy </b>
+
+Kube-proxy is an important component of each Kubernetes worker node. It is responsible for providing network routing to support Kubernetes networking components.
+
+<h4> a) Moving kube-proxy config file to appropriate location </h4>
+
+```javascript
+sudo mv kube-proxy.kubeconfig /var/lib/kube-proxy/kubeconfig
+```
+![](images/130.png)
+
+<h4> b) Create the kube-proxy config file </h4>
+
+```javascript
+cat << EOF | sudo tee /var/lib/kube-proxy/kube-proxy-config.yaml
+kind: KubeProxyConfiguration
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+clientConnection:
+  kubeconfig: "/var/lib/kube-proxy/kubeconfig"
+mode: "iptables"
+clusterCIDR: "10.200.0.0/16"
+EOF
+```
+![](images/131.png)
+
+<h4> c) Create the kube-proxy systemd unit file </h4>
+
+```javascript
+cat << EOF | sudo tee /etc/systemd/system/kube-proxy.service
+[Unit]
+Description=Kubernetes Kube Proxy
+Documentation=https://github.com/kubernetes/kubernetes
+
+[Service]
+ExecStart=/usr/local/bin/kube-proxy \\
+  --config=/var/lib/kube-proxy/kube-proxy-config.yaml
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+![](images/132.png)
+
+<h4> d) Start up the worker node services </h4>
+
+```javascript
+sudo systemctl daemon-reload
+```
+![](images/133.png)
+
+```javascript
+sudo systemctl enable containerd kubelet kube-proxy
+```
+![](images/134.png)
+
+```javascript
+sudo systemctl start containerd kubelet kube-proxy
+```
+![](images/135.png)
+
+<h4> e) Check the status of each service to make sure they are all active (running) on both worker nodes </h4>
+
+```javascript
+sudo systemctl status containerd kubelet kube-proxy
+```
+![](images/136.png)
+
+Now that you have started all the services of worker nodes, verify that they are registered with the cluster. Log-in in one of the controller nodes and type the following command.
+
+```javascript
+kubectl get nodes
+```
+![](images/137.png)
+
+All the worker nodes will be in NotReady state. This is because till now we have not done the Networking part.
+

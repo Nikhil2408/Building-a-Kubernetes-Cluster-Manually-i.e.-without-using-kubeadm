@@ -1719,3 +1719,8 @@ kubectl get nodes
 
 All the worker nodes will be in NotReady state. This is because till now we have not done the Networking part.
 
+<h3> 7. Configuring kubectl for Remote Access </h3>
+
+Kubectl is a powerful command-line tool that allows you to manage Kubernetes clusters. In order to manage the cluster from the local machine, we will need to configure our local kubectl to connect to the remote cluster. 
+
+To do this we will generate a local kubeconfig that will authenticate as the admin user and access the kubernetes API through the load balancer.

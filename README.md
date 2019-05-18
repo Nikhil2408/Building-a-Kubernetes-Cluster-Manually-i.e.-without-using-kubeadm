@@ -1722,5 +1722,52 @@ All the worker nodes will be in NotReady state. This is because till now we have
 <h3> 7. Configuring kubectl for Remote Access </h3>
 
 Kubectl is a powerful command-line tool that allows you to manage Kubernetes clusters. In order to manage the cluster from the local machine, we will need to configure our local kubectl to connect to the remote cluster. 
-
 To do this we will generate a local kubeconfig that will authenticate as the admin user and access the kubernetes API through the load balancer.
+
+My cloud servers don't allow access to the port 6443 which we use for our kubernetes API server. So in a separate shell we will open an ssh tunnel to port 6443 on our kubernetes API load balancer.
+
+What we are doing is forwarding port 6443 from our localhost box on port 6443. So it will listen on our localhost box on port 6443 and its going to tunnel traffic through ssh connection to port 6443. Make sure you do this ssh connection task in a separate shell.
+
+```javascript
+ssh -L 6443:localhost:6443 user@<your Load balancer cloud server public IP>
+```
+![](images/138.png)
+
+Now switch to another terminal and make sure you are in k8s directory and execute the following commands.
+
+```javascript
+kubectl config set-cluster kubernetes-the-hard-way \
+  --certificate-authority=ca.pem \
+  --embed-certs=true \
+  --server=https://localhost:6443
+```
+![](images/139.png)
+
+```javascript
+kubectl config set-credentials admin \
+  --client-certificate=admin.pem \
+  --client-key=admin-key.pem
+```
+![](images/140.png)
+
+```javascript
+kubectl config set-context kubernetes-the-hard-way \
+  --cluster=kubernetes-the-hard-way \
+  --user=admin
+```
+![](images/141.png)
+
+```javascript
+kubectl config use-context kubernetes-the-hard-way
+```
+![](images/142.png)
+
+Verify everything is working or not:
+
+```javascript
+kubectl get pods
+kubectl get nodes
+kubectl version
+```
+![](images/143.png)
+

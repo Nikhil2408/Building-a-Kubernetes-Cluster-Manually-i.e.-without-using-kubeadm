@@ -1771,3 +1771,6 @@ kubectl version
 ```
 ![](images/143.png)
 
+<h3> 8. Networking </h3>
+
+Kubernetes provides a powerful networking model which allows pods to communicate with one another over a virtual network, regardless of what host they are running on.

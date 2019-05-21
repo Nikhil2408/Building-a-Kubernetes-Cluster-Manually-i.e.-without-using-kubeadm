@@ -1988,3 +1988,5 @@ kubectl exec -ti $POD_NAME -- nslookup kubernetes
 ![](images/164.png)
 
 If nslookup succeeds, then your kube-dns installation is working!
+
+The Kubernetes Cluster has been successfully set up!!!

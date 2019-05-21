@@ -1807,6 +1807,7 @@ echo "net.ipv4.conf.all.forwarding=1" | sudo tee -a /etc/sysctl.conf
 
 2. The remaining commands can be done using kubectl. To connect with kubectl, either log in to one of the control nodes and run kubectl there or open an SSH tunnel for port 6443 to the load balancer server and use kubectl locally. Here I will be doing by ssh login.
 
+Open the ssh in another terminal on local machine and execute the next command in another terminal.
 ```javascript
 ssh -L 6443:localhost:6443 user@<your Load balancer cloud server public IP>
 ```
@@ -1814,9 +1815,131 @@ ssh -L 6443:localhost:6443 user@<your Load balancer cloud server public IP>
 
 3. Installing Weave Net
 
+Make sure to execute this command in terminal other than ssh connection terminal on local machine. 
 ```javascript
 kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')&env.IPALLOC_RANGE=10.200.0.0/16"
 ```
 ![](images/147.png)
 
-Now, weave net is installed
+Now, weave net is installed, therefore we will test our network to make sure everything is working or not.
+
+First, make sure the Weave Net pods are up and running:
+
+```javascript
+kubectl get nodes
+```
+```javascript
+kubectl get pods -n kube-system
+```
+![](images/148.png)
+
+This shows that the two worker nodes and the weave net pods are in running state.
+
+Next, we want to test that pods can connect to each other and that they can connect to services. Set up two Nginx pods and a service for those two pods. Then, create a busybox pod and use it to test connectivity to both Nginx pods and the service.
+
+<b>Step 1:</b> Create an Nginx deployment with 2 replicas.
+
+```javascript
+cat << EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      run: nginx
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        run: nginx
+    spec:
+      containers:
+      - name: my-nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+EOF
+```
+![](images/149.png)
+
+<b>Step 2:</b> Create a service for that deployment to test connectivity to services.
+
+ ```javascript
+ kubectl expose deployment/nginx
+ ```
+ ![](images/150.png)
+ 
+ <b>Step 3:</b> Start the busybox pod to test connectivity to other pods and services.
+ 
+ ```javascript
+ kubectl run busybox --image=radial/busyboxplus:curl --command -- sleep 3600
+```
+![](images/151.png)
+
+Fetch the busybox pod name to the environment variable so that it can be used directly.
+
+```javascript
+POD_NAME=$(kubectl get pods -l run=busybox -o jsonpath="{.items[0].metadata.name}")
+```
+![](images/152.png)
+
+<b>Step 4:</b> Get the IP address of both the nginx pods.
+
+```javascript
+kubectl get ep nginx
+```
+![](images/153.png)
+
+There should be two IP addresses listed under ENDPOINTS.
+
+<b>Step 5:</b> Try to connect to nginx pods using busybox pod from the above two IP address.
+
+```javascript
+kubectl exec $POD_NAME -- curl <first nginx pod IP address>
+```
+![](images/154.png)
+
+```javascript
+kubectl exec $POD_NAME -- curl <second nginx pod IP address>
+```
+![](images/155.png)
+
+Both commands should return some HTML with the title "Welcome to Nginx!" This means that we can connect successfully to other pods.
+
+<b>Step 6:</b> Get the IP address of the service created.
+
+```javascript
+kubectl get svc
+```
+![](images/156.png)
+
+<b>Step 7:</b> Verify that we can connect to services from another pod using IP address of the service.
+
+```javascript
+kubectl exec $POD_NAME -- curl <nginx service IP address>
+```
+![](images/157.png)
+
+This should also return HTML with the title "Welcome to Nginx!".This means that we have successfully reached the Nginx service from inside a pod and that our networking configuration is working.
+
+<b> Cleanup of the resources </b>
+
+Make sure to clean the resources deployed before moving further. These object could get in the way or become confusing in later lessons, so it is a good idea to remove them from the cluster before proceeding.
+
+The commands for cleanup can be done using kubectl. To connect with kubectl, either log in to one of the control nodes and run kubectl there or open an SSH tunnel for port 6443 to the load balancer server and use kubectl locally.
+
+```javascript
+kubectl delete deployment busybox
+```
+
+```javascript
+kubectl delete deployment nginx
+```
+![](images/158.png)
+
+```javascript
+kubectl delete svc nginx
+```
+![](images/159.png)

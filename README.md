@@ -1943,3 +1943,15 @@ kubectl delete deployment nginx
 kubectl delete svc nginx
 ```
 ![](images/159.png)
+
+<h3> 9. DNS In a Kubernetes Pod Network </h3>
+
+It provides a DNS service to be used by pods within the network. It configures containers to use the DNS service to perform DNS lookups.
+
+To install and test kube-dns, you will need to use kubectl. To connect with kubectl, you can either log in to one of the control nodes and run kubectl there, or open an SSH tunnel for port 6443 to the load balancer server and use kubectl locally.
+
+<h4> a) Installing kube-dns </h4>
+
+```javascript
+kubectl create -f https://storage.googleapis.com/kubernetes-the-hard-way/kube-dns.yaml
+```

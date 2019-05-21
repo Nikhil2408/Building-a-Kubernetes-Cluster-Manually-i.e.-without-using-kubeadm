@@ -1774,3 +1774,49 @@ kubectl version
 <h3> 8. Networking </h3>
 
 Kubernetes provides a powerful networking model which allows pods to communicate with one another over a virtual network, regardless of what host they are running on.
+
+<b> K8s Networking Model </b>
+
+* Kubernetes networking model has only one virtual network that spans around all the nodes. 
+* Each pod has a unique IP address within the cluster.
+* Each service has a unique IP that is in a different range than pod IPs.
+
+<b> Cluster Network Architecture </b>
+
+1. <b> Cluster CIDR </b>- It is a way of allocating IP addresses and it provides to specify the CIDR range which is just a notation of showing a particular range of IP addresses. Provides IP range to assign IPs to pods in the cluster.
+Here the CIDR range is 10.200.0.0/16
+
+2. <b> Service Cluster IP range </b>- IP range for services in the cluster. This should not overlap with the cluster CIDR range.
+Here the service cluster IP range is 10.32.0.0/24
+
+3. <b> Pod CIDR </b>- IP range for pods on a specific worker node. This range should fall within the cluster CIDR but not overlap with the pod CIDR of any other worker node. The networking plugin (Weave net) will automatically handle IP allocation to nodes so there is no need to manually set the pod CIDR.
+
+<b> Setting up the networking part</b>
+
+1. Log in to both the worker nodes and enable IP forwarding in both the worker nodes.
+
+```javascript
+sudo sysctl net.ipv4.conf.all.forwarding=1
+```
+![](images/144.png)
+
+```javascript
+echo "net.ipv4.conf.all.forwarding=1" | sudo tee -a /etc/sysctl.conf
+```
+![](images/145.png)
+
+2. The remaining commands can be done using kubectl. To connect with kubectl, either log in to one of the control nodes and run kubectl there or open an SSH tunnel for port 6443 to the load balancer server and use kubectl locally. Here I will be doing by ssh login.
+
+```javascript
+ssh -L 6443:localhost:6443 user@<your Load balancer cloud server public IP>
+```
+![](images/146.png)
+
+3. Installing Weave Net
+
+```javascript
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')&env.IPALLOC_RANGE=10.200.0.0/16"
+```
+![](images/147.png)
+
+Now, weave net is installed

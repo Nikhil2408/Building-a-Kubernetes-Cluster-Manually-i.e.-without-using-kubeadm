@@ -1955,3 +1955,36 @@ To install and test kube-dns, you will need to use kubectl. To connect with kube
 ```javascript
 kubectl create -f https://storage.googleapis.com/kubernetes-the-hard-way/kube-dns.yaml
 ```
+![](images/160.png)
+
+<h4> b) Verify that the kube-dns pod starts up correctly </h4>
+
+```javascript
+kubectl get pods -l k8s-app=kube-dns -n kube-system
+```
+![](images/161.png)
+
+Make sure that 3/3 containers are ready, and that the pod has a status of Running. It may take a moment for the pod to be fully up and running, so if READY is not 3/3 at first, check again after a few moments. Now let's test our kube-dns installation by doing a DNS lookup from within a pod.
+
+First start a pod:
+
+```javascript
+kubectl run busybox --image=busybox:1.28 --command -- sleep 3600
+```
+![](images/162.png)
+
+Fetch the busybox pod name to the environment variable so that it can be used directly.
+
+```javascript
+POD_NAME=$(kubectl get pods -l run=busybox -o jsonpath="{.items[0].metadata.name}")
+```
+![](images/163.png)
+
+Run an nslookup from inside the busybox container.
+
+```javascript
+kubectl exec -ti $POD_NAME -- nslookup kubernetes
+```
+![](images/164.png)
+
+If nslookup succeeds, then your kube-dns installation is working!
